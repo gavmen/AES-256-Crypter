@@ -3,42 +3,13 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-
-class DecryptionTool
-{
-    public static void Main()
-    {
-        Console.WriteLine("Welcome to the Decryption Tool!");
-
-        // Get ciphertext from the user
-        Console.Write("Enter the ciphertext: ");
-        string cipherText = Console.ReadLine();
-
-        // Get the encryption key from the user
-        Console.Write("Enter the encryption key (32 bytes for AES-256): ");
-        string key = Console.ReadLine();
-
-        try
-        {
-            // Decrypt the ciphertext
-            string decryptedText = DecryptString(cipherText, key);
-
-            // Display the decrypted text
-            Console.WriteLine($"Decrypted Text: {decryptedText}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An error occurred: {ex.Message}");
-        }
-    }
-}
 class Program
 {
-    private static string EncryptString(string plainText, string key)
+    private static string EncryptString(string plainText, byte[] keyBytes)
     {
         using (Aes aes = Aes.Create())
         {
-            aes.Key = Encoding.UTF8.GetBytes(key);
+            aes.Key = keyBytes;
             aes.IV = new byte[16]; // Initialization vector with 16 zeros
 
             ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
@@ -57,11 +28,11 @@ class Program
         }
     }
 
-    private static string DecryptString(string cipherText, string key)
+    private static string DecryptString(string cipherText, byte[] keyBytes)
     {
         using (Aes aes = Aes.Create())
         {
-            aes.Key = Encoding.UTF8.GetBytes(key);
+            aes.Key = keyBytes;
             aes.IV = new byte[16]; // Initialization vector with 16 zeros
 
             ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
@@ -79,15 +50,72 @@ class Program
         }
     }
 
+    private static string GenerateRandomKey(out byte[] keyBytes)
+    {
+        using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+        {
+            keyBytes = new byte[32];
+            rng.GetBytes(keyBytes);
+            return Convert.ToBase64String(keyBytes);
+        }
+    }
+
     static void Main()
     {
-        string key = "12345678901234567890123456789012"; // 32 bytes for AES-256
-        string originalText = "Hello, World!";
+        Console.WriteLine("Choose an option:");
+        Console.WriteLine("1. Encrypt and display text");
+        Console.WriteLine("2. Decrypt text using tool");
+        int choice = int.Parse(Console.ReadLine());
 
-        string encryptedText = EncryptString(originalText, key);
-        Console.WriteLine($"Encrypted: {encryptedText}");
+        switch (choice)
+        {
+            case 1:
+                Console.WriteLine("Do you want to:");
+                Console.WriteLine("1. Generate a key");
+                Console.WriteLine("2. Enter your own key");
+                int keyChoice = int.Parse(Console.ReadLine());
+                byte[] keyBytes;
 
-        string decryptedText = DecryptString(encryptedText, key);
-        Console.WriteLine($"Decrypted: {decryptedText}");
+                if (keyChoice == 1)
+                {
+                    string key = GenerateRandomKey(out keyBytes);
+                    Console.WriteLine($"Generated Key: {key}");
+                    Console.WriteLine("");
+                }
+                else
+                {
+                    Console.WriteLine("Enter your key (32 bytes for AES-256 in Base64 format):");
+                    string key = Console.ReadLine();
+                    keyBytes = Convert.FromBase64String(key);
+                }
+
+                string originalText = "Hello, World!";
+                string encryptedText = EncryptString(originalText, keyBytes);
+                Console.WriteLine($"Encrypted: {encryptedText}");
+                string decryptedText = DecryptString(encryptedText, keyBytes);
+                Console.WriteLine($"Decrypted: {decryptedText}");
+                break;
+
+            case 2:
+                Console.WriteLine("Enter the ciphertext: ");
+                string cipherText = Console.ReadLine();
+                Console.WriteLine("Enter the encryption key (32 bytes for AES-256 in Base64 format): ");
+                string decryptionKey = Console.ReadLine();
+                byte[] decryptionKeyBytes = Convert.FromBase64String(decryptionKey);
+                try
+                {
+                    string toolDecryptedText = DecryptString(cipherText, decryptionKeyBytes);
+                    Console.WriteLine($"Decrypted Text: {toolDecryptedText}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                }
+                break;
+
+            default:
+                Console.WriteLine("Invalid choice.");
+                break;
+        }
     }
 }
