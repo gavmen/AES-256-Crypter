@@ -60,61 +60,126 @@ class Program
         }
     }
 
+    private static void EncryptFile(string inputFile, string outputFile, byte[] keyBytes)
+    {
+        byte[] fileBytes = File.ReadAllBytes(inputFile);
+        string fileContentBase64 = Convert.ToBase64String(fileBytes);
+        string encryptedContent = EncryptString(fileContentBase64, keyBytes);
+        File.WriteAllText(outputFile, encryptedContent);
+    }
+
+    private static void DecryptFile(string inputFile, string outputFile, byte[] keyBytes)
+    {
+        string encryptedContent = File.ReadAllText(inputFile);
+        string decryptedContentBase64 = DecryptString(encryptedContent, keyBytes);
+        byte[] decryptedBytes = Convert.FromBase64String(decryptedContentBase64);
+        File.WriteAllBytes(outputFile, decryptedBytes);
+    }
+
     static void Main()
     {
-        Console.WriteLine("Choose an option:");
-        Console.WriteLine("1. Encrypt and display text");
-        Console.WriteLine("2. Decrypt text using tool");
-        int choice = int.Parse(Console.ReadLine());
+        Console.WriteLine("Choose an operation:");
+        Console.WriteLine("1. Encrypt/Decrypt Text");
+        Console.WriteLine("2. Encrypt/Decrypt File");
+        int operationChoice = int.Parse(Console.ReadLine());
 
-        switch (choice)
+        byte[] keyBytes;
+        string key;
+
+        switch (operationChoice)
         {
             case 1:
-                Console.WriteLine("Do you want to:");
-                Console.WriteLine("1. Generate a key");
-                Console.WriteLine("2. Enter your own key");
-                int keyChoice = int.Parse(Console.ReadLine());
-                byte[] keyBytes;
+                Console.WriteLine("Choose an option:");
+                Console.WriteLine("1. Encrypt and display text");
+                Console.WriteLine("2. Decrypt text using tool");
+                int choice = int.Parse(Console.ReadLine());
 
-                if (keyChoice == 1)
+                if (choice == 1)
                 {
-                    string key = GenerateRandomKey(out keyBytes);
-                    Console.WriteLine($"Generated Key: {key}");
-                    Console.WriteLine("");
+                    Console.WriteLine("Do you want to:");
+                    Console.WriteLine("1. Generate a key");
+                    Console.WriteLine("2. Enter your own key");
+                    int keyChoice = int.Parse(Console.ReadLine());
+
+                    if (keyChoice == 1)
+                    {
+                        key = GenerateRandomKey(out keyBytes);
+                        Console.WriteLine($"Generated Key: {key}");
+                        Console.WriteLine("");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Enter your key (32 bytes for AES-256 in Base64 format):");
+                        key = Console.ReadLine();
+                        keyBytes = Convert.FromBase64String(key);
+                    }
+
+                    string originalText = "Hello, World!";
+                    string encryptedText = EncryptString(originalText, keyBytes);
+                    Console.WriteLine($"Encrypted: {encryptedText}");
+                    string decryptedText = DecryptString(encryptedText, keyBytes);
+                    Console.WriteLine($"Decrypted: {decryptedText}");
+                }
+                else if (choice == 2)
+                {
+                    Console.WriteLine("Enter the ciphertext: ");
+                    string cipherText = Console.ReadLine();
+                    Console.WriteLine("Enter the encryption key (32 bytes for AES-256 in Base64 format): ");
+                    key = Console.ReadLine();
+                    keyBytes = Convert.FromBase64String(key);
+
+                    try
+                    {
+                        string toolDecryptedText = DecryptString(cipherText, keyBytes);
+                        Console.WriteLine($"Decrypted Text: {toolDecryptedText}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"An error occurred: {ex.Message}");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("Enter your key (32 bytes for AES-256 in Base64 format):");
-                    string key = Console.ReadLine();
-                    keyBytes = Convert.FromBase64String(key);
+                    Console.WriteLine("Invalid choice.");
                 }
-
-                string originalText = "Hello, World!";
-                string encryptedText = EncryptString(originalText, keyBytes);
-                Console.WriteLine($"Encrypted: {encryptedText}");
-                string decryptedText = DecryptString(encryptedText, keyBytes);
-                Console.WriteLine($"Decrypted: {decryptedText}");
                 break;
 
             case 2:
-                Console.WriteLine("Enter the ciphertext: ");
-                string cipherText = Console.ReadLine();
+                Console.WriteLine("Choose an option:");
+                Console.WriteLine("1. Encrypt a file");
+                Console.WriteLine("2. Decrypt a file");
+                int fileChoice = int.Parse(Console.ReadLine());
+
                 Console.WriteLine("Enter the encryption key (32 bytes for AES-256 in Base64 format): ");
-                string decryptionKey = Console.ReadLine();
-                byte[] decryptionKeyBytes = Convert.FromBase64String(decryptionKey);
-                try
+                key = Console.ReadLine();
+                keyBytes = Convert.FromBase64String(key);
+
+                switch (fileChoice)
                 {
-                    string toolDecryptedText = DecryptString(cipherText, decryptionKeyBytes);
-                    Console.WriteLine($"Decrypted Text: {toolDecryptedText}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An error occurred: {ex.Message}");
+                    case 1:
+                        Console.WriteLine("Enter the path of the file to encrypt:");
+                        string inputFileEncrypt = Console.ReadLine();
+                        Console.WriteLine("Enter the path for the encrypted output file:");
+                        string outputFileEncrypt = Console.ReadLine();
+                        EncryptFile(inputFileEncrypt, outputFileEncrypt, keyBytes);
+                        break;
+
+                    case 2:
+                        Console.WriteLine("Enter the path of the file to decrypt:");
+                        string inputFileDecrypt = Console.ReadLine();
+                        Console.WriteLine("Enter the path for the decrypted output file:");
+                        string outputFileDecrypt = Console.ReadLine();
+                        DecryptFile(inputFileDecrypt, outputFileDecrypt, keyBytes);
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid choice.");
+                        break;
                 }
                 break;
 
             default:
-                Console.WriteLine("Invalid choice.");
+                Console.WriteLine("Invalid operation choice.");
                 break;
         }
     }
