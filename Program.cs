@@ -114,7 +114,8 @@ class Program
                         keyBytes = Convert.FromBase64String(key);
                     }
 
-                    string originalText = "Hello, World!";
+                    Console.WriteLine("Enter the message you want to encrypt:");
+                    string originalText = Console.ReadLine();
                     string encryptedText = EncryptString(originalText, keyBytes);
                     Console.WriteLine($"Encrypted: {encryptedText}");
                     string decryptedText = DecryptString(encryptedText, keyBytes);
@@ -150,9 +151,23 @@ class Program
                 Console.WriteLine("2. Decrypt a file");
                 int fileChoice = int.Parse(Console.ReadLine());
 
-                Console.WriteLine("Enter the encryption key (32 bytes for AES-256 in Base64 format): ");
-                key = Console.ReadLine();
-                keyBytes = Convert.FromBase64String(key);
+                Console.WriteLine("Do you want to:");
+                Console.WriteLine("1. Generate a key");
+                Console.WriteLine("2. Enter your own key");
+                int fileKeyChoice = int.Parse(Console.ReadLine());
+
+                if (fileKeyChoice == 1)
+                {
+                    key = GenerateRandomKey(out keyBytes);
+                    Console.WriteLine($"Generated Key: {key}");
+                    Console.WriteLine("");
+                }
+                else
+                {
+                    Console.WriteLine("Enter the encryption key (32 bytes for AES-256 in Base64 format): ");
+                    key = Console.ReadLine();
+                    keyBytes = Convert.FromBase64String(key);
+                }
 
                 switch (fileChoice)
                 {
@@ -161,12 +176,6 @@ class Program
                         string inputFileEncrypt = Console.ReadLine();
                         Console.WriteLine("Enter the path for the encrypted output file:");
                         string outputFileEncrypt = Console.ReadLine();
-                        
-                        if (string.IsNullOrWhiteSpace(Path.GetFileName(outputFileEncrypt)))
-                        {
-                            Console.WriteLine("Please provide a valid filename for the encrypted output file.");
-                            break;
-                        }
                         
                         try
                         {
@@ -184,7 +193,16 @@ class Program
                         string inputFileDecrypt = Console.ReadLine();
                         Console.WriteLine("Enter the path for the decrypted output file:");
                         string outputFileDecrypt = Console.ReadLine();
-                        DecryptFile(inputFileDecrypt, outputFileDecrypt, keyBytes);
+                        
+                        try
+                        {
+                            DecryptFile(inputFileDecrypt, outputFileDecrypt, keyBytes);
+                            Console.WriteLine("Decryption successful!");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"An error occurred: {ex.Message}");
+                        }
                         break;
 
                     default:
