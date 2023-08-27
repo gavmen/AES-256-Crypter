@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -161,7 +161,22 @@ class Program
                         string inputFileEncrypt = Console.ReadLine();
                         Console.WriteLine("Enter the path for the encrypted output file:");
                         string outputFileEncrypt = Console.ReadLine();
-                        EncryptFile(inputFileEncrypt, outputFileEncrypt, keyBytes);
+                        
+                        if (string.IsNullOrWhiteSpace(Path.GetFileName(outputFileEncrypt)))
+                        {
+                            Console.WriteLine("Please provide a valid filename for the encrypted output file.");
+                            break;
+                        }
+                        
+                        try
+                        {
+                            EncryptFile(inputFileEncrypt, outputFileEncrypt, keyBytes);
+                            Console.WriteLine("Encryption successful!");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"An error occurred: {ex.Message}");
+                        }
                         break;
 
                     case 2:
